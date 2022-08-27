@@ -1,3 +1,7 @@
+import pydot
+import shutil
+import os
+
 # Create a node
 class BTreeNode:
     def __init__(self, leaf=False):
@@ -92,13 +96,20 @@ class BTree:
        elif len(x.child[i].keys) >= j and not x.child[i].leaf:#ok
           self.delete(x.child[i], k)
           if len(x.child[i].keys) == 0:
-             x.child.append(None)
-             if x.child[i + 1] != None:
-                self.delete_merge(x, i, i + 1)
+             #x.child.append(None)
+             if i < (len(x.child) - 1):
+                if len(x.child[i + 1].keys) >= (j + 1):
+                   self.delete_sibling(x, i, i + 1)
+                else:
+                   self.delete_merge(x, i, i + 1)
              else:
-                self.delete_merge(x, i, i - 1)
+                if len(x.child[i - 1].keys) >= (j + 1):
+                   self.delete_sibling(x, i, i - 1)
+                else:
+                   self.delete_merge(x, i, i - 1)
        else:
           self.delete(x.child[i], k)
+          if len(x.child) != 0: return
           if i != 0 and i + 1 < len(x.child):
              if len(x.child[i - 1].keys) >= (j + 1):
                 self.delete_sibling(x, i, i - 1)
@@ -221,6 +232,27 @@ class BTree:
        if len(x.child) > 0:
           for i in x.child:
              self.print_tree(i, l)
+   
+   # Preorder
+   def preOrder(self, x):
+       for i in x.keys:
+          print i,
+       if len(x.child) > 0:
+          for i in x.child:
+             self.preOrder(i)
+   
+   # Preorder Graph
+   def preOrderGraph(self, x, graph):
+       if not x:
+           return graph
+       s = [str(i) for i in x.keys]
+       res = "|".join(s)
+       graph.add_node(pydot.Node(x.keys[0], shape="record", label=res))
+       if len(x.child) > 0:
+          for i in x.child:
+             graph = self.preOrderGraph(i, graph)
+             graph.add_edge(pydot.Edge(x.keys[0], i.keys[0], color="blue"))
+       return graph
 
    # Search key in the tree
    def search_key(self, k, x=None):
@@ -234,23 +266,60 @@ class BTree:
              return None
           else:
              return self.search_key(k, x.child[i])
-         
        else:
           return self.search_key(k, self.root)
-
+   
+   def getMinValue(self, x):
+       if len(x.child) == 0:
+          if len(x.keys) == 0:
+             return None
+          return x.keys[0]
+       return self.getMinValue(x.child[0])
+   
+   def getMaxValue(self, x):
+       if len(x.child) == 0:
+          if len(x.keys) == 0:
+             return None
+          return x.keys[len(x.keys) - 1]
+       return self.getMaxValue(x.child[len(x.child) - 1])
 
 def main():
+    shutil.rmtree('Graficos')
+    os.mkdir("Graficos")
     B = BTree(4)
 
     #for i in range(10):
     #    B.insert((i, 2 * i))
     #nums = [33, 13, 8, 40, 35, 46, 21, 10, 34]
     #nums = [20, 40, 10, 30, 33, 50, 60]
-    nums = [5, 10, 15, 20, 25, 28, 30, 31, 32, 33, 35, 40, 45, 50, 55, 60, 65]
+    nums = [40, 20, 32, 45, 50, 25, 35, 55, 28, 30, 31, 33, 60, 65, 5, 10, 15]
+    i = 1
     for num in nums:
         B.insert(num)
+        graph = pydot.Dot("B_Tree", graph_type="graph", bgcolor="white")
+        graph = B.preOrderGraph(B.root, graph)
+        graph.write_png("Graficos/B_Tree_" + str(i) + ".png")
+        print "Grafico", i, ", insertando", num, ", revisar archivo generado..."
+        i = i + 1
+    nums = [35, 40, 21, 10]
+    for num in nums:
+        B.iDelete(B.root, num)
+        graph = pydot.Dot("B_Tree", graph_type="graph", bgcolor="white")
+        graph = B.preOrderGraph(B.root, graph)
+        graph.write_png("Graficos/B_Tree_" + str(i) + ".png")
+        print "Grafico ", i, ", borrando", num,  ", revisar archivo generado..."
+        i = i + 1
 
+    print "Minimo:", B.getMinValue(B.root)
+    print "Maximo:", B.getMaxValue(B.root)
+    nums = [33, 40, 55]
+    for num in nums:
+        print "Buscando: ", num,
+        print ", se encontro en arbol" if not B.search_key(num) is None else ", no se encontro en arbol"
+    '''
     B.print_tree(B.root)
+    B.preOrder(B.root)
+    print
     n = 8
     print "Search: ", n,
     if B.search_key(n) is not None:
@@ -262,7 +331,6 @@ def main():
         print "Delete: ", num
         B.iDelete(B.root, num)
         B.print_tree(B.root)
-    '''
     n = 35
     print "Delete: ", n
     B.delete(B.root, n)
