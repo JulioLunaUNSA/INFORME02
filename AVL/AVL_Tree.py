@@ -186,16 +186,32 @@ def main():
     os.mkdir("Graficos")
     myTree = AVLTree()
     root = None
-    nums = [33, 13, 8, 40, 35, 4, 6, 21]
+    #nums = [33, 13, 8, 40, 35, 4, 6, 21]
+    nums = [40, 20, 32, 45, 50, 25, 35, 55, 28, 30, 31, 33, 60, 65, 5, 10, 15]
     i = 1
     for num in nums:
         root = myTree.insert_node(root, num)
         graph = pydot.Dot("AVL_Tree", graph_type="graph", bgcolor="white")
         graph = myTree.preOrderGraph(root, graph)
         graph.write_png("Graficos/AVL_Tree_" + str(i) + ".png")
-        print "Grafico ", i, ", revisar archivo generado..."
+        print "Grafico", i, ", insertando", num, ", revisar archivo generado..."
         i = i + 1
-
+    nums = [35, 25, 21, 10]
+    for num in nums:
+        root = myTree.delete_node(root, num)
+        graph = pydot.Dot("AVL_Tree", graph_type="graph", bgcolor="white")
+        graph = myTree.preOrderGraph(root, graph)
+        graph.write_png("Graficos/AVL_Tree_" + str(i) + ".png")
+        print "Grafico ", i, ", borrando", num,  ", revisar archivo generado..."
+        i = i + 1
+    
+    print "Minimo:", myTree.getMinValueNode(root).key
+    print "Maximo:", myTree.getMaxValueNode(root).key
+    nums = [15, 35, 40]
+    for num in nums:
+        print "Buscando: ", num,
+        print ", se encontro en arbol" if not myTree.searchValueNode(root, num) is None else ", no se encontro en arbol"
+    '''
     myTree.printHelper(root, "", True)
     key = 13
     root = myTree.delete_node(root, key)
@@ -218,5 +234,6 @@ def main():
     graph = myTree.preOrderGraph(root, graph)
     graph.write_png("Graficos/AVL_Tree_" + str(i) +".png")
     print "Grafico final, revisar archivo generado..."
+    '''
 
 main()
